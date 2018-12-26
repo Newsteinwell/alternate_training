@@ -40,12 +40,14 @@ class TestDynamicInput():
     def build_model(self):
         x = self.x
         x_dim = x.get_shape().as_list()[1]
+        with tf.variable_scope('softID') as sp:
+            softID_train = tf.Variable(0.0)
+            softID_train_ = tf.assign(softID_train, self.soft, validate_shape=False)
+
         if self.soft_train == True:
-            with tf.variable_scope('softID') as sp:
-                softID = tf.Variable(self.soft, validate_shape=False)
-                soft_dim = self.soft.get_shape().as_list()[1]
-                input_ = tf.concat([x, softID], axis=1)
-                input_dim = x_dim + soft_dim
+            soft_dim = self.soft.get_shape().as_list()[1]
+            input_ = tf.concat([x, softID_train_], axis=1)
+            input_dim = x_dim + soft_dim
         else:
             soft_dim = self.soft.get_shape().as_list()[1]
             input_ = tf.concat([x, self.soft], axis=1)
@@ -73,6 +75,7 @@ class TestDynamicInput():
         return (loss)
 
     def fit(self, X, y):
+        self.sess.run(tf.global_variables_initializer())
         loss_result = {}
         sample_num = X.shape[0]
         idx = np.arange(sample_num)
